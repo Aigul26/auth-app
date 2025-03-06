@@ -10,11 +10,11 @@ router = APIRouter(prefix='/users', tags=['Auth app'])
 @router.post("/create", summary="Создать нового пользователя")
 async def create_user(user_create: UserBase):
     async with async_session_maker() as session:
-        user = await session.execute(
+        existing_user = await session.execute(
             select(User).where(User.phone == user_create.phone)
         )
-        user = user.scalars().first()
-        if user:
+        existing_user = existing_user.scalars().first()
+        if existing_user:
             raise HTTPException(
                 status_code=400,
                 detail="Пользователь с таким номером телефона уже существует"
@@ -31,10 +31,10 @@ async def create_user(user_create: UserBase):
         return new_user
     
 
-@router.get("/get/{phone}", summary="Получить данные пользователя")
-async def get_user(phone: str):
+@router.get("/get/{id}", summary="Получить данные пользователя")
+async def get_user(id: int):
     async with async_session_maker() as session:
-        query = select(User).where(User.phone == phone)
+        query = select(User).where(User.id == id)
         result = await session.execute(query)
         user = result.scalars().first()
 
@@ -46,12 +46,12 @@ async def get_user(phone: str):
         return user
     
 
-@router.put("/update/{phone}", summary="Изменить данные пользователя")
-async def get_user(phone: str, 
+@router.put("/update/{id}", summary="Изменить данные пользователя")
+async def update_user(id: int, 
                    firstname: str | None = Query(default=None), 
                    lastname: str | None = Query(default=None)):
     async with async_session_maker() as session:
-        user = await session.execute(select(User).where(User.phone == phone))
+        user = await session.execute(select(User).where(User.id == id))
         user = user.scalars().first()
 
         if not user:
@@ -70,17 +70,17 @@ async def get_user(phone: str,
         return user
     
 
-@router.delete("/delete/{phone}", summary="Удалить пользователя")
-async def delete_user(phone: str):
+@router.delete("/delete/{id}", summary="Удалить пользователя")
+async def delete_user(id: int):
     async with async_session_maker() as session:
-        user = await session.execute(
-            select(User).where(User.phone == phone)
+        existing_user = await session.execute(
+            select(User).where(User.id == id)
         )
-        if not user:
+        if not existing_user:
             raise HTTPException(
                 status_code=404,
                 detail="Пользователь не существует")
         
-        query = delete(User).where(User.phone == phone)
+        query = delete(User).where(User.id == id)
         await session.execute(query)
         await session.commit()
