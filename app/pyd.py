@@ -5,6 +5,6 @@ from pydantic import BaseModel, Field
 
 
 class UserBase(BaseModel):
-    phone: str = Field(..., max_length=255, examples=['+79876543210'])
+    phone: str = Field(..., max_length=12, examples=['+79876543210'])
     firstname: str = Field(..., examples=['Ivan'])
     lastname: str = Field(..., examples=['Ivanov'])
